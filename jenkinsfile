@@ -1,0 +1,37 @@
+pipeline {
+    agent any
+    tools{
+        maven 'maven 3.8.6'
+    }
+    stages {
+        stage('Checkout') {
+            steps {
+        checkout scmGit(branches: [[name: '*/main']], extensions: [], userRemoteConfigs: [[credentialsId: '0b748d5e-9882-4682-9a9c-b9c5d47b982f', url: 'https://github.com/katasanireddy/mavenrepo.git']])        
+            }
+        }    
+        stage('Build') {
+            steps {
+                sh 'mvn clean package'
+            }
+       }
+        stage('upload war to nexus') {
+            steps {
+               nexusArtifactUploader artifacts: [
+                   [
+                   artifactId: 'studentapp', 
+                   classifier: '',
+                   file: 'target/studentapp-2.5.war', 
+                   type: 'war'
+                   ]
+               ],
+                   credentialsId: '80041f24-34dd-4404-969f-6b172878dca6',
+                   groupId: 'com.jdevs',
+                   nexusUrl: 'ec2-3-110-41-79.ap-south-1.compute.amazonaws.com:8086',
+                   nexusVersion: 'nexus3',
+                   protocol: 'http',
+                   repository: 'maven-release', 
+                   version: '2.5'
+            }
+        }
+    }
+}
